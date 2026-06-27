@@ -7,19 +7,14 @@ import java.util.Set;
 
 public class OnlineVotingSystem extends JFrame {
 
-    private JTextField nameField;
-    private JTextField voterIdField;
-    private JTextField ageField;
-
+    private JTextField nameField, voterIdField, ageField;
     private JComboBox<String> partyBox;
+    private JTextArea resultArea;
 
-    private Map<String, Integer> votes;
-    private Set<String> votedIds;
+    private Map<String, Integer> votes = new HashMap<>();
+    private Set<String> votedIds = new HashSet<>();
 
     public OnlineVotingSystem() {
-
-        votes = new HashMap<>();
-        votedIds = new HashSet<>();
 
         votes.put("DMK", 0);
         votes.put("ADMK", 0);
@@ -27,178 +22,163 @@ public class OnlineVotingSystem extends JFrame {
         votes.put("TVK", 0);
 
         setTitle("Online Voting System");
-        setSize(700, 550);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(700, 500);
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout());
 
-        JLabel title = new JLabel(
-                "ONLINE VOTING SYSTEM",
-                JLabel.CENTER);
-
-        title.setFont(new Font("Arial", Font.BOLD, 28));
+        JLabel title = new JLabel("ONLINE VOTING SYSTEM", JLabel.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 24));
         title.setOpaque(true);
-        title.setBackground(new Color(0, 102, 204));
+        title.setBackground(Color.BLUE);
         title.setForeground(Color.WHITE);
-        title.setPreferredSize(new Dimension(700, 60));
+        panel.add(title, BorderLayout.NORTH);
 
-        mainPanel.add(title, BorderLayout.NORTH);
+        JPanel form = new JPanel(new GridLayout(5, 2, 10, 10));
 
-        JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
-
-        formPanel.setBorder(
-                BorderFactory.createTitledBorder(
-                        "Voter Registration"));
-
-        formPanel.add(new JLabel("Name:"));
+        form.add(new JLabel("Name"));
         nameField = new JTextField();
-        formPanel.add(nameField);
+        form.add(nameField);
 
-        formPanel.add(new JLabel("Voter ID:"));
+        form.add(new JLabel("Voter ID"));
         voterIdField = new JTextField();
-        formPanel.add(voterIdField);
+        form.add(voterIdField);
 
-        formPanel.add(new JLabel("Age:"));
+        form.add(new JLabel("Age"));
         ageField = new JTextField();
-        formPanel.add(ageField);
+        form.add(ageField);
 
-        formPanel.add(new JLabel("Select Party:"));
+        form.add(new JLabel("Select Party"));
+        partyBox = new JComboBox<>(new String[]{"DMK", "ADMK", "NTK", "TVK"});
+        form.add(partyBox);
 
-        String[] parties = {
-                "DMK",
-                "ADMK",
-                "NTK",
-                "TVK"
-        };
+        JButton vote = new JButton("CAST VOTE");
+        JButton result = new JButton("SHOW RESULTS");
 
-        partyBox = new JComboBox<>(parties);
-        formPanel.add(partyBox);
+        form.add(vote);
+        form.add(result);
 
-        JButton voteButton = new JButton("CAST VOTE");
-        voteButton.setBackground(new Color(0, 153, 76));
-        voteButton.setForeground(Color.WHITE);
+        panel.add(form, BorderLayout.CENTER);
 
-        JButton resultButton = new JButton("SHOW RESULTS");
-        resultButton.setBackground(new Color(0, 102, 204));
-        resultButton.setForeground(Color.WHITE);
-
-        formPanel.add(voteButton);
-        formPanel.add(resultButton);
-
-        JTextArea resultArea = new JTextArea();
+        resultArea = new JTextArea(10, 30);
         resultArea.setEditable(false);
-        resultArea.setFont(new Font("Consolas", Font.PLAIN, 16));
+        panel.add(new JScrollPane(resultArea), BorderLayout.SOUTH);
 
-        JScrollPane scrollPane =
-                new JScrollPane(resultArea);
+        add(panel);
 
-        mainPanel.add(formPanel, BorderLayout.CENTER);
-        mainPanel.add(scrollPane, BorderLayout.SOUTH);
+        vote.addActionListener(e -> castVote());
 
-        add(mainPanel);
-
-        voteButton.addActionListener(e -> {
-
-            String name = nameField.getText().trim();
-            String voterId = voterIdField.getText().trim();
-            String ageText = ageField.getText().trim();
-
-            if (name.isEmpty() ||
-                voterId.isEmpty() ||
-                ageText.isEmpty()) {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Please fill all details.");
-                return;
-            }
-
-            int age;
-
-            try {
-                age = Integer.parseInt(ageText);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Enter valid age.");
-                return;
-            }
-
-            if (age < 18) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "You are not eligible to vote.");
-                return;
-            }
-
-            if (votedIds.contains(voterId)) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "This Voter ID has already voted.");
-                return;
-            }
-
-            String party =
-                    (String) partyBox.getSelectedItem();
-
-            votes.put(
-                    party,
-                    votes.get(party) + 1);
-
-            votedIds.add(voterId);
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Vote Successfully Cast for "
-                            + party);
-
-            nameField.setText("");
-            voterIdField.setText("");
-            ageField.setText("");
-        });
-
-        resultButton.addActionListener(e -> {
-
-            String winner = "";
-            int maxVotes = -1;
-
-            resultArea.setText(
-                    "===== ELECTION RESULTS =====\n\n");
-
-            for (Map.Entry<String, Integer> entry :
-                    votes.entrySet()) {
-
-                resultArea.append(
-                        entry.getKey()
-                                + " : "
-                                + entry.getValue()
-                                + " Votes\n");
-
-                if (entry.getValue() > maxVotes) {
-                    maxVotes = entry.getValue();
-                    winner = entry.getKey();
-                }
-            }
-
-            resultArea.append(
-                    "\n========================\n");
-
-            resultArea.append(
-                    "WINNING PARTY : "
-                            + winner);
-
-            resultArea.append(
-                    "\nTOTAL VOTES : "
-                            + maxVotes);
-        });
+        result.addActionListener(e -> showResult());
 
         setVisible(true);
     }
 
-    public static void main(String[] args) {
+    private void castVote() {
 
-        SwingUtilities.invokeLater(() ->
-                new OnlineVotingSystem());
+        String name = nameField.getText().trim();
+        String id = voterIdField.getText().trim();
+        String ageText = ageField.getText().trim();
+
+        if (name.isEmpty() || id.isEmpty() || ageText.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Fill all fields");
+            return;
+        }
+
+        int age;
+
+        try {
+            age = Integer.parseInt(ageText);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Invalid Age");
+            return;
+        }
+
+        if (age < 18) {
+            JOptionPane.showMessageDialog(this, "Not Eligible");
+            return;
+        }
+
+        if (votedIds.contains(id)) {
+            JOptionPane.showMessageDialog(this, "Already Voted");
+            return;
+        }
+
+        String party = (String) partyBox.getSelectedItem();
+
+        votes.put(party, votes.get(party) + 1);
+        votedIds.add(id);
+
+        JOptionPane.showMessageDialog(this, "Vote Cast Successfully");
+
+        nameField.setText("");
+        voterIdField.setText("");
+        ageField.setText("");
     }
-}
+
+    private void showResult() {
+
+        resultArea.setText("===== RESULTS =====\n\n");
+
+        String winner = "";
+        int max = -1;
+
+        for (String party : votes.keySet()) {
+
+            int count = votes.get(party);
+
+            resultArea.append(party + " : " + count + " Votes\n");
+
+            if (count > max) {
+                max = count;
+                winner = party;
+            }
+        }
+
+        if (max == 0)
+            winner = "No Votes";
+
+        resultArea.append("\nWinner : " + winner);
+    }
+
+    public static void loginPage() {
+
+        JFrame login = new JFrame("Login");
+        login.setSize(350, 220);
+        login.setLayout(new GridLayout(3, 2, 10, 10));
+        login.setLocationRelativeTo(null);
+        login.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JTextField user = new JTextField();
+        JPasswordField pass = new JPasswordField();
+
+        login.add(new JLabel("Username"));
+        login.add(user);
+
+        login.add(new JLabel("Password"));
+        login.add(pass);
+
+        JButton btn = new JButton("LOGIN");
+        login.add(new JLabel());
+        login.add(btn);
+
+        btn.addActionListener(e -> {
+
+            String u = user.getText();
+            String p = new String(pass.getPassword());
+
+            if (u.equals("admin") && p.equals("1234")) {
+                login.dispose();
+                new OnlineVotingSystem();
+            } else {
+                JOptionPane.showMessageDialog(login, "Invalid Login");
+            }
+        });
+
+        login.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> loginPage());
+    }
+}               
